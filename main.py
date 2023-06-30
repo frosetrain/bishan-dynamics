@@ -8,7 +8,7 @@ hub = PrimeHub()
 
 left_motor = Motor(Port.B, positive_direction=Direction.COUNTERCLOCKWISE)
 right_motor = Motor(Port.F, positive_direction=Direction.CLOCKWISE)
-third_motor = Motor(Port.D, positive_direction=Direction.COUNTERCLOCKWISE)
+third_motor = Motor(Port.D, positive_direction=Direction.CLOCKWISE)
 left_sensor = ColorSensor(Port.A)
 right_sensor = ColorSensor(Port.E)
 side_sensor = ColorSensor(Port.C)
@@ -41,43 +41,64 @@ tallies = {
     7: [0, 0, 0],
 }
 
-left_motor.run_angle(360, 270)
-right_motor.run_angle(360, 270)
 
-stopwatch = StopWatch()
-slot = 0
+def detect():
+    stopwatch = StopWatch()
+    slot = 0
 
-while True:
-    # print(slot)
-    # ll = (left_sensor.reflection() - BLACK) / (WHITE - BLACK)
-    rl = (right_sensor.reflection() - BLACK) / (WHITE - BLACK)
-    sc = side_sensor.color()
-    
-    if (
-        stopwatch.time() > SLOT_TIMES[slot][0]
-        and stopwatch.time() < SLOT_TIMES[slot][1]
-    ):
-        if sc == Color.NONE:
-            tallies[slot][0] += 1
-        if sc == Color.BLACK:
-            tallies[slot][1] += 1
-        if sc == Color.WHITE:
-            tallies[slot][2] += 3
-    
-    if stopwatch.time() > SLOT_TIMES[slot][1]:
-        slot += 1
-        if slot == 8:
-            break
-    
-    # print(ll, rl)
-    db.drive(150, (rl - 0.5) * 100)
-    # db.drive(100, (ll - rl) * 69)
+    while True:
+        # print(slot)
+        # ll = (left_sensor.reflection() - BLACK) / (WHITE - BLACK)
+        rl = (right_sensor.reflection() - BLACK) / (WHITE - BLACK)
+        # sc = side_sensor.color()
+        sr = side_sensor.reflection()
+        if sr <= 3:
+            sc = Color.NONE
+        elif sr <= 30:
+            sc = Color.BLACK
+        else:
+            sc = Color.WHITE
 
-print(tallies)
-for i in range(8):
-    if max(tallies[i]) == tallies[i][0]:
-        print("NONE")
-    if max(tallies[i]) == tallies[i][1]:
-        print("BLACK")
-    if max(tallies[i]) == tallies[i][2]:
-        print("WHITE")
+        if (
+            stopwatch.time() > SLOT_TIMES[slot][0]
+            and stopwatch.time() < SLOT_TIMES[slot][1]
+        ):
+            if sc == Color.NONE:
+                tallies[slot][0] += 1
+            if sc == Color.BLACK:
+                tallies[slot][1] += 1
+            if sc == Color.WHITE:
+                tallies[slot][2] += 3
+        if stopwatch.time() > SLOT_TIMES[slot][1]:
+            slot += 1
+            if slot == 8:
+                break
+        db.drive(150, (rl - 0.5) * 100)
+        # db.drive(100, (ll - rl) * 69)
+    print(tallies)
+    for i in range(8):
+        if max(tallies[i]) == tallies[i][0]:
+            print("NONE")
+        if max(tallies[i]) == tallies[i][1]:
+            print("BLACK")
+        if max(tallies[i]) == tallies[i][2]:
+            print("WHITE")
+
+
+if __name__ == "__main__":
+    third_motor.reset_angle()
+    third_motor.run_target(0, 0)
+    left_motor.run_angle(360, 300)
+    right_motor.run_angle(360, 300)
+    detect()
+    db.straight(125)
+    db.turn(-90)
+    db.straight(100)
+    db.turn(90)
+    db.straight(200)
+    db.turn(180)
+
+    # while True:
+        # ll = (left_sensor.reflection() - BLACK) / (WHITE - BLACK)
+        # rl = (right_sensor.reflection() - BLACK) / (WHITE - BLACK)
+        # db.drive(150, (ll - rl) * 100)
