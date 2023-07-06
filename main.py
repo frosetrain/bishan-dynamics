@@ -8,12 +8,13 @@ hub = PrimeHub()
 
 left_motor = Motor(Port.B, positive_direction=Direction.COUNTERCLOCKWISE)
 right_motor = Motor(Port.F, positive_direction=Direction.CLOCKWISE)
-third_motor = Motor(Port.D, positive_direction=Direction.CLOCKWISE)
+third_motor = Motor(Port.C, positive_direction=Direction.CLOCKWISE)
 left_sensor = ColorSensor(Port.A)
 right_sensor = ColorSensor(Port.E)
-side_sensor = ColorSensor(Port.C)
+side_sensor = ColorSensor(Port.D)
 side_sensor.detectable_colors((Color.WHITE, Color.BLACK, Color.NONE))
 db = DriveBase(left_motor, right_motor, 56, 160)
+db.settings(straight_acceleration=1500, turn_rate=300, turn_acceleration=1000)
 
 WHITE = 93
 BLACK = 10
@@ -87,18 +88,23 @@ def detect():
 
 if __name__ == "__main__":
     third_motor.reset_angle()
-    third_motor.run_target(0, 0)
-    left_motor.run_angle(360, 300)
-    right_motor.run_angle(360, 300)
+    third_motor.run_target(200, 0, wait=False)
+    left_motor.run_angle(360, 270)
+    right_motor.run_angle(360, 270)
     detect()
-    db.straight(125)
-    db.turn(-90)
-    db.straight(100)
-    db.turn(90)
-    db.straight(200)
-    db.turn(180)
+    db.straight(75)
+    db.turn(-25)
+    db.straight(130)
+    third_motor.run_angle(200, 45)
+    db.straight(-130)
+    db.turn(45)
+    third_motor.run_angle(200, -45)
+    db.straight(70)
+    third_motor.run_angle(200, 45)
+    db.straight(-140)
+    db.turn(80)
 
-    # while True:
-        # ll = (left_sensor.reflection() - BLACK) / (WHITE - BLACK)
-        # rl = (right_sensor.reflection() - BLACK) / (WHITE - BLACK)
-        # db.drive(150, (ll - rl) * 100)
+    while True:
+        ll = (left_sensor.reflection() - BLACK) / (WHITE - BLACK)
+        rl = (right_sensor.reflection() - BLACK) / (WHITE - BLACK)
+        db.drive(150, (ll - rl) * 100)
