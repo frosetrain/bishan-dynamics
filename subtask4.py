@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # left_motor.run_angle(360, 270)
     # right_motor.run_angle(360, 270)
     # detect()
-        
+
     while left_sensor.color() != Color.RED:
         ll = (left_sensor.reflection() - BLACK) / (WHITE - BLACK)
         rl = (right_sensor.reflection() - BLACK) / (WHITE - BLACK)
@@ -67,9 +67,12 @@ if __name__ == "__main__":
         ll = (left_sensor.reflection() - BLACK) / (WHITE - BLACK)
         rl = (right_sensor.reflection() - BLACK) / (WHITE - BLACK)
         db.drive(300, (ll - rl) * 60)
-        #print(pick_angle)
+        # print(pick_angle)
         if (
-            ll < 0.1 and rl > 0.7 and left_motor.angle() > pick_angle + 700 and has_object == True
+            ll < 0.1
+            and rl > 0.7
+            and left_motor.angle() > pick_angle + 700
+            and has_object == True
         ):  # funny left turn
             print("DEPOSITING WITH PICKANGLE", pick_angle)
             db.curve(200, -60, Stop.HOLD)
@@ -86,11 +89,11 @@ if __name__ == "__main__":
         if ll < 0.1 and rl < 0.1:  # funny left turn
             db.straight(69)
             db.turn(90)
-            #third_motor.run_angle(150, wait=False)
+            # third_motor.run_angle(150, wait=False)
             db.straight(-150)
             db.straight(150)
-            #third_motor.run_target(0, wait=False)
-            
+            # third_motor.run_target(0, wait=False)
+
             print("PICKING UP")
             while left_sensor.color() != Color.RED:
                 db.drive(300, 0)

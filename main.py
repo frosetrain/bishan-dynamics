@@ -70,7 +70,6 @@ def attempt():
             pthing = thing
             print("off", left_motor.angle())
         db.drive(150, (rl - 0.5) * 100)
-        
 
 
 def detect():

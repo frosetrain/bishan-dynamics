@@ -16,7 +16,7 @@ db.settings(straight_acceleration=1500, turn_rate=120, turn_acceleration=1000)
 
 hue = 0
 morse = "11101010100010100010101000101010100010111000111010000000111010100011101011101110001110100010111000111011100010100011101011101000101010"
-name =  "B           I     S       H         A       N    /      D         Y               N       A       M      I     C                S     "
+name = "B           I     S       H         A       N    /      D         Y               N       A       M      I     C                S     "
 a1 = Matrix(
     [
         [100, 0, 100, 0, 100],
