@@ -51,6 +51,7 @@ def detect():
             if slot == 8:
                 break
         db.drive(300, (right_ref - 0.5) * 100)
+
     south_numed = [[val, i + 1] for i, val in enumerate(tallies[:4])]
     north_numed = [[val, i + 1] for i, val in enumerate(tallies[4:])]
     south_sorted = sorted(south_numed, reverse=True)
@@ -76,10 +77,14 @@ def drive_to_inter(speed, direction, delay=0):
         db.drive(speed, (l_ref - r_ref) * 50)
         l_ref = (left_sensor.reflection() - BLACK) / (WHITE - BLACK)
         r_ref = (right_sensor.reflection() - BLACK) / (WHITE - BLACK)
-        hit_left = direction == "left" and l_ref < 0.2 and r_ref > 0.5 and stopwatch.time() > delay
-        hit_right = direction == "right" and l_ref > 0.5 and r_ref < 0.2 and stopwatch.time() > delay
-        hit_double = direction == "double" and l_ref < 0.2 and r_ref < 0.2 and stopwatch.time() > delay
-        if hit_left or hit_right or hit_double:
+        if direction == "left":
+            hit = l_ref < 0.2 and r_ref > 0.5
+        elif direction == "right":
+            hit = l_ref > 0.5 and r_ref < 0.2
+        elif direction == "double":
+            hit = l_ref < 0.2 and r_ref < 0.2
+            
+        if hit and stopwatch.time() > delay:
             db.straight(69)
             return
 
