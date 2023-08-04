@@ -88,7 +88,8 @@ def drive_to_inter(speed, direction, delay=0):
             db.straight(69)
             return
 
-
+'''
+# Scan
 third_motor.reset_angle()
 third_motor.run_target(200, 0, wait=False)
 left_motor.run_angle(360, 270)
@@ -108,18 +109,27 @@ db.turn(150)
 db.straight(235)
 db.turn(-55)
 
+# Sweep
+db.settings(turn_rate=100)
 drive_to_inter(350, "left", 200)
-db.straight(70)
-db.curve(160 * 2 / 3, -90)
 db.straight(50)
-db.curve(160 * 2 / 3, 180)
-db.straight(80)
+db.curve(160 * 2 / 3, -100)
+db.straight(50)
+db.curve(160 * 2 / 3, 190)
+db.straight(40)
 db.turn(90)
 drive_to_inter(350, "right", 500)
 db.straight(70)
 db.curve(160 * 2 / 3, 90)
-db.straight(50)
 db.curve(160 * 2 / 3, -180)
-db.straight(80)
-db.turn(90)
+db.straight(60)
+db.turn(-90)'''
 drive_to_inter(350, "right", 1000)
+
+db.turn(90)
+drive_to_inter(350, "right", 500)
+db.curve(160, -40)
+db.curve(160, 40)
+db.straight(80)
+db.straight(-200)
+db.turn(90)
