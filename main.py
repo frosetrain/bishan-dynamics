@@ -57,14 +57,8 @@ def detect():
     south_sorted = sorted(south_numed, reverse=True)
     north_sorted = sorted(north_numed, reverse=True)
     return {
-        "south": {
-            "white": south_sorted[0][1],
-            "black": south_sorted[1][1]
-        },
-        "north": {
-            "white": north_sorted[0][1],
-            "black": north_sorted[1][1]
-        }
+        "south": {"white": south_sorted[0][1], "black": south_sorted[1][1]},
+        "north": {"white": north_sorted[0][1], "black": north_sorted[1][1]},
     }
 
 
@@ -83,17 +77,19 @@ def drive_to_inter(speed, direction, delay=0):
             hit = l_ref > 0.5 and r_ref < 0.2
         elif direction == "double":
             hit = l_ref < 0.2 and r_ref < 0.2
-            
+
         if hit and stopwatch.time() > delay:
             db.straight(69)
             return
 
-'''
+
 # Scan
 third_motor.reset_angle()
 third_motor.run_target(200, 0, wait=False)
-left_motor.run_angle(360, 270)
-right_motor.run_angle(360, 270)
+# left_motor.run_angle(360, 270)
+# right_motor.run_angle(360, 270)
+db.curve(160 * 2 / 3, 47.25)
+db.curve(160 * 2 / 3, -47.25)
 positions = detect()
 print(positions)
 db.stop()
@@ -113,9 +109,9 @@ db.turn(-55)
 db.settings(turn_rate=100)
 drive_to_inter(350, "left", 200)
 db.straight(50)
-db.curve(160 * 2 / 3, -100)
+db.curve(160 * 2 / 3, -90)
 db.straight(50)
-db.curve(160 * 2 / 3, 190)
+db.curve(160 * 2 / 3, 180)
 db.straight(40)
 db.turn(90)
 drive_to_inter(350, "right", 500)
@@ -123,7 +119,7 @@ db.straight(70)
 db.curve(160 * 2 / 3, 90)
 db.curve(160 * 2 / 3, -180)
 db.straight(60)
-db.turn(-90)'''
+db.turn(-90)
 drive_to_inter(350, "right", 1000)
 
 db.turn(90)
