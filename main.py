@@ -5,7 +5,7 @@ from pybricks.robotics import GyroDriveBase
 from pybricks.tools import wait, StopWatch
 
 hub = PrimeHub()
-third_motor = Motor(Port.E, positive_direction=Direction.COUNTERCLOCKWISE)
+third_motor = Motor(Port.E, positive_direction=Direction.CLOCKWISE)
 left_motor = Motor(Port.C, positive_direction=Direction.COUNTERCLOCKWISE)
 right_motor = Motor(Port.A, positive_direction=Direction.CLOCKWISE)
 side_sensor = ColorSensor(Port.F)
@@ -57,8 +57,14 @@ def detect():
     south_sorted = sorted(south_numed, reverse=True)
     north_sorted = sorted(north_numed, reverse=True)
     return {
-        "south": {"white": south_sorted[0][1], "black": south_sorted[1][1]},
-        "north": {"white": north_sorted[0][1], "black": north_sorted[1][1]},
+        "south": {
+            "white": south_sorted[0][1],
+            "black": south_sorted[1][1]
+        },
+        "north": {
+            "white": north_sorted[0][1],
+            "black": north_sorted[1][1]
+        }
     }
 
 
@@ -77,23 +83,22 @@ def drive_to_inter(speed, direction, delay=0):
             hit = l_ref > 0.5 and r_ref < 0.2
         elif direction == "double":
             hit = l_ref < 0.2 and r_ref < 0.2
-
+            
         if hit and stopwatch.time() > delay:
-            db.straight(69)
+            db.straight(56)
             return
 
 
 # Scan
 third_motor.reset_angle()
-third_motor.run_target(200, 0, wait=False)
-# left_motor.run_angle(360, 270)
-# right_motor.run_angle(360, 270)
-db.curve(160 * 2 / 3, 47.25)
-db.curve(160 * 2 / 3, -47.25)
+third_motor.run_target(200, 45, wait=False)
+'''
+left_motor.run_angle(360, 270)
+right_motor.run_angle(360, 270)
 positions = detect()
 print(positions)
 db.stop()
-db.turn(30)
+db.turn(40)
 db.straight(165)
 third_motor.run_target(200, 45)
 db.straight(-165)
@@ -109,9 +114,9 @@ db.turn(-55)
 db.settings(turn_rate=100)
 drive_to_inter(350, "left", 200)
 db.straight(50)
-db.curve(160 * 2 / 3, -90)
+db.curve(160 * 2 / 3, -100)
 db.straight(50)
-db.curve(160 * 2 / 3, 180)
+db.curve(160 * 2 / 3, 190)
 db.straight(40)
 db.turn(90)
 drive_to_inter(350, "right", 500)
@@ -127,5 +132,64 @@ drive_to_inter(350, "right", 500)
 db.curve(160, -40)
 db.curve(160, 40)
 db.straight(80)
-db.straight(-200)
+db.straight(-290)
 db.turn(90)
+db.straight(50, then=Stop.NONE)'''
+drive_to_inter(350, "left", 1000)
+db.settings(straight_speed=200, turn_rate=100)
+positions = {
+    "south": {
+        "white": 1,
+        "black": 2
+    },
+    "north": {
+        "white": 1,
+        "black": 2
+    }
+}
+if positions["south"]["black"] == 1:
+    db.straight(-180)
+    db.turn(-90)
+    db.straight(100)
+    third_motor.run_target(360, 0)
+    db.straight(-80)
+    third_motor.run_target(360, 45)
+    db.straight(-20)
+    db.turn(90)
+    drive_to_inter(350, "left", 250)
+elif positions["south"]["black"] == 2:
+    db.straight(-450)
+    db.turn(-90)
+    db.straight(290)
+    db.turn(90)
+    db.straight(120)
+    third_motor.run_target(360, 0)
+    db.straight(-80)
+    third_motor.run_target(360, 45)
+    db.straight(-40)
+    db.turn(90)
+    db.straight(290)
+    db.turn(-90)
+    drive_to_inter(350, "left", 500)
+elif positions["south"]["black"] == 3:
+    db.turn(-90)
+    drive_to_inter(350, "double", 250)
+    db.straight(90)
+    db.turn(90)
+    db.straight(150)
+    third_motor.run_target(360, 0)
+    db.straight(-80)
+    third_motor.run_target(360, 45)
+    db.straight(-70)
+    db.turn(90)
+    drive_to_inter(350, "right", 500)
+elif positions["south"]["black"] == 4:
+    db.straight(320)
+    db.turn(-90)
+    db.straight(100)
+    third_motor.run_target(360, 0)
+    db.straight(-80)
+    third_motor.run_target(360, 45)
+    db.straight(-20)
+    db.turn(-90)
+    db.straight(320)
