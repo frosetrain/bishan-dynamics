@@ -1,15 +1,14 @@
 from pybricks.hubs import PrimeHub
-from pybricks.pupdevices import Motor, ColorSensor, UltrasonicSensor, ForceSensor
-from pybricks.parameters import Button, Color, Direction, Port, Side, Stop
+from pybricks.pupdevices import Motor
+from pybricks.parameters import Direction, Port
 from pybricks.robotics import DriveBase
-from pybricks.tools import wait, StopWatch
 from usys import stdin
 from uselect import poll
 
 hub = PrimeHub()
-third_motor = Motor(Port.E, positive_direction=Direction.CLOCKWISE)
-left_motor = Motor(Port.C, positive_direction=Direction.COUNTERCLOCKWISE)
-right_motor = Motor(Port.A, positive_direction=Direction.CLOCKWISE)
+left_motor = Motor(Port.E, Direction.COUNTERCLOCKWISE)
+right_motor = Motor(Port.A)
+main_motor = Motor(Port.C)
 db = DriveBase(left_motor, right_motor, 56, 160)
 db.settings(straight_acceleration=1500, turn_rate=300, turn_acceleration=1000)
 

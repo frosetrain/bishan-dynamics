@@ -1,3 +1,6 @@
+"""This code is considerably retarded.
+Code was written by Sriram"""
+
 from pybricks.hubs import PrimeHub
 from pybricks.pupdevices import Motor, ColorSensor, UltrasonicSensor, ForceSensor
 from pybricks.parameters import Button, Color, Direction, Port, Side, Stop
