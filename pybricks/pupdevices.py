@@ -35,6 +35,9 @@ class Motor:
     def reset_angle(self, speed, angle=None):
         logger.debug(f"reset_angle({speed}, {angle})")
 
+    def run(self, speed):
+        logger.debug(f"run({speed})")
+
     def angle(self) -> int:
         return 2
 
@@ -49,8 +52,7 @@ class ColorSensor:
         ...
 
     def reflection(self) -> int:
-        # TODO
-        return None
+        return 0
 
     def color(self) -> Color:
         # TODO

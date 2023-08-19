@@ -1,42 +1,28 @@
-from enum import Enum
+from enum import Enum, auto
 
 
-class Color:
+class Color(Enum):
     """Light or surface color."""
 
-    NONE = ...
-    BLACK = ...
-    GRAY = ...
-    WHITE = ...
-    RED = ...
-    ORANGE = ...
-    BROWN = ...
-    YELLOW = ...
-    GREEN = ...
-    CYAN = ...
-    BLUE = ...
-    VIOLET = ...
-    MAGENTA = ...
+    NONE = auto()
+    BLACK = auto()
+    GRAY = auto()
+    WHITE = auto()
+    RED = auto()
+    ORANGE = auto()
+    BROWN = auto()
+    YELLOW = auto()
+    GREEN = auto()
+    CYAN = auto()
+    BLUE = auto()
+    VIOLET = auto()
+    MAGENTA = auto()
 
     def __init__(self, h, s, v):
         self.h = h
         self.s = s
         self.v = v
 
-
-Color.NONE = Color(0, 0, 0)
-Color.BLACK = Color(0, 0, 10)
-Color.GRAY = Color(0, 0, 50)
-Color.WHITE = Color(0, 0, 100)
-Color.RED = Color(0, 100, 100)
-Color.ORANGE = Color(30, 100, 100)
-Color.BROWN = Color(30, 100, 50)
-Color.YELLOW = Color(60, 100, 100)
-Color.GREEN = Color(120, 100, 100)
-Color.CYAN = Color(180, 100, 100)
-Color.BLUE = Color(240, 100, 100)
-Color.VIOLET = Color(270, 100, 100)
-Color.MAGENTA = Color(300, 100, 100)
 
 Colors = {
     "NONE": Color.NONE,

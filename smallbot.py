@@ -2,10 +2,10 @@
 We can always use this if the BD23 randomly explodes"""
 
 from pybricks.hubs import PrimeHub
-from pybricks.pupdevices import Motor, ColorSensor
-from pybricks.parameters import Direction, Port, Stop, Color
+from pybricks.parameters import Color, Direction, Port, Stop
+from pybricks.pupdevices import ColorSensor, Motor
 from pybricks.robotics import GyroDriveBase
-from pybricks.tools import wait, StopWatch
+from pybricks.tools import StopWatch, wait
 
 hub = PrimeHub()
 third_motor = Motor(Port.E, positive_direction=Direction.CLOCKWISE)
@@ -159,7 +159,8 @@ def deposit_one(slot, side):
         db.turn(90)
         db.straight(-320)
 
-'''
+
+"""
 # Scan
 third_motor.reset_angle()
 third_motor.run_target(200, 0, wait=False)
@@ -178,7 +179,7 @@ db.straight(105)
 third_motor.run_target(200, 45)
 db.turn(170)
 linetrack_by_distance(150, 170)
-db.turn(-90)'''
+db.turn(-90)"""
 
 # Sweep
 linetrack_by_distance(350, 730)
@@ -223,4 +224,3 @@ db.straight(120)
 db.settings(turn_rate=50)
 db.turn(40, wait=False)
 third_motor.run_angle(50, -20)
-
