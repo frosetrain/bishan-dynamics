@@ -5,7 +5,11 @@ from pybricks.hubs import PrimeHub
 from pybricks.pupdevices import Motor, ColorSensor
 from pybricks.parameters import Direction, Port, Stop, Color
 from pybricks.robotics import GyroDriveBase
+<<<<<<< Updated upstream
 from pybricks.tools import wait, StopWatch
+=======
+from pybricks.tools import StopWatch
+>>>>>>> Stashed changes
 
 hub = PrimeHub()
 third_motor = Motor(Port.E, positive_direction=Direction.CLOCKWISE)

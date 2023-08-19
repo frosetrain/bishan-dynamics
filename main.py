@@ -1,8 +1,17 @@
+<<<<<<< Updated upstream
+=======
+"""Bishan Dynamics BD23"""
+
+>>>>>>> Stashed changes
 from pybricks.hubs import PrimeHub
 from pybricks.pupdevices import Motor, ColorSensor, UltrasonicSensor
 from pybricks.parameters import Button, Color, Direction, Port, Side, Stop
 from pybricks.robotics import GyroDriveBase
+<<<<<<< Updated upstream
 from pybricks.tools import wait, StopWatch
+=======
+from pybricks.tools import wait
+>>>>>>> Stashed changes
 
 hub = PrimeHub()
 left_motor = Motor(Port.E, Direction.COUNTERCLOCKWISE)
@@ -16,7 +25,6 @@ db = GyroDriveBase(left_motor, right_motor, wheel_diameter=56, axle_track=160)
 db.settings(straight_acceleration=450, turn_rate=300, turn_acceleration=300)
 left_sensor.detectable_colors([Color.RED, Color.NONE, Color.WHITE])
 right_sensor.detectable_colors([Color.NONE, Color.WHITE, Color.BLACK])
-stopwatch = StopWatch()
 
 WHITE = 100
 BLACK = 0
@@ -32,17 +40,42 @@ slot_votes = [0] * 8
 ferris_angle = 0
 
 
+<<<<<<< Updated upstream
 def gen_slot_angle_list(begin, slot_width, slot_interval, mid_gap):
     for i in range(9):
         if i < 4:
             slot_angles.append(
+=======
+def gen_slot_distances(
+    begin: int, slot_width: int, slot_interval: int, mid_gap: int
+) -> list[list[int]]:
+    """Generate the list of distances where slots are positioned
+
+    Args:
+        begin (int): Begin
+        slot_width (int): Width of slot
+        slot_interval (int): Gap between slots
+        mid_gap (int): Gap between Pacific and Caribbean slots
+
+    Returns:
+        list[list[int]]: List of slot distances
+    """
+    slot_distances = []
+    for i in range(9):  # NOTE: Why 9? There are 8 slots
+        if i < 4:
+            slot_distances.append(
+>>>>>>> Stashed changes
                 [
                     begin + (i * slot_interval) + (i * slot_width),
                     begin + (i * slot_interval) + (i * slot_width) + slot_width,
                 ]
             )
         else:
+<<<<<<< Updated upstream
             slot_angles.append(
+=======
+            slot_distances.append(
+>>>>>>> Stashed changes
                 [
                     begin + ((i - 1) * slot_interval) + (i * slot_width) + mid_gap,
                     begin
@@ -52,7 +85,11 @@ def gen_slot_angle_list(begin, slot_width, slot_interval, mid_gap):
                     + slot_width,
                 ]
             )
+<<<<<<< Updated upstream
     print(slot_angles)
+=======
+    return slot_distances
+>>>>>>> Stashed changes
 
 
 def detect():
@@ -75,6 +112,7 @@ def sus():
 
 def linetracingtodistance(distance_covered):
     db.reset()
+<<<<<<< Updated upstream
     # DEBUG = 0
     while db.distance() < distance_covered:
         # DEBUG += 1
@@ -100,11 +138,55 @@ def linetracing(past_junctions=1, racing_line_turn=0):
             print(total_sensor_value)
             junctions_covered += 1
     db.straight(0, Stop.BRAKE)  # include this for braking
+=======
+    while db.distance() < distance:
+        db.drive(350, (left_sensor.reflection() - right_sensor.reflection()) * 2.2)
+    db.stop()
+
+
+def linetrack_to_corner(
+    turn_direction: str,
+    turn_angle: int = 0,
+    min_distance: int = 30,
+    backwards: bool = False,
+    speed: int = 350,
+) -> None:
+    """Linetrack to a corner, then do a smooth turn.
+
+    Args:
+        turn_direction (str): The direction of the turn - left, double or right
+        turn_angle (int, optional): The angle of the turn. Defaults to 0.
+        min_distance (int, optional): The minimum distance driven before turning. Defaults to 30.
+        backwards (bool, optional): Whether the bot drives backwards. Defaults to False.
+        speed (int, optional): Speed of robot. Defaults to 350.
+    """
+    db.reset()
+    if backwards:
+        speed = -speed
+
+    while True:
+        l_ref = left_sensor.reflection()
+        r_ref = right_sensor.reflection()
+        db.drive(speed, (l_ref - r_ref) * 1.2)
+
+        l_ref = left_sensor.reflection()
+        r_ref = right_sensor.reflection()
+        if turn_direction == "left":
+            hit = l_ref < 0.2 and r_ref > 0.5
+        elif turn_direction == "right":
+            hit = l_ref > 0.5 and r_ref < 0.2
+        elif turn_direction == "double":
+            hit = l_ref < 0.2 and r_ref < 0.2
+
+        if hit and db.distance() > min_distance:
+            break
+
+    db.straight(0, Stop.BRAKE)
+>>>>>>> Stashed changes
     initial_heading = hub.imu.heading()
-    print(initial_heading)
-    target_heading = initial_heading + racing_line_turn
-    print(target_heading)
-    if racing_line_turn <= 0:
+    target_heading = initial_heading + turn_angle
+    print(initial_heading, target_heading)
+    if turn_angle <= 0:
         while 3 < abs(target_heading - hub.imu.heading()):
             right_motor.run(500)
     else:
@@ -207,6 +289,7 @@ def ferris_wheel_up_and_turn(desired_cart):
     ferris_wheel_turn(desired_cart)
 
 
+<<<<<<< Updated upstream
 
 
 
@@ -300,6 +383,50 @@ def voting():
 
     print("VOTING RESULTS:", slot_colours)
     db.straight(0)
+=======
+def voting(slot_distances: list[list[int]]) -> list[str]:
+    """Improved Kenneth voting to scan cubes.
+    Highest average reflection is white, second highest is black.
+
+    Args:
+        slot_distances (list[list[int]]): List of distances for the slots
+
+    Returns:
+        list[str]: The result after scanning each slot
+    """
+    slot_averages = [0] * 8
+    slot_no = 0
+    current_tally = 0
+    reading_count = 0
+    db.reset()
+    while True:
+        reflection = left_sensor.reflection()
+        distance = db.distance()
+        if slot_distances[slot_no][0] + 10 < distance < slot_distances[slot_no][1] - 10:
+            current_tally += reflection
+            reading_count += 1
+        if distance >= slot_distances[slot_no + 1][0] - 10:
+            print(current_tally, reading_count)
+            slot_averages[slot_no] = current_tally / reading_count
+            current_tally = 0
+            reading_count = 0
+            slot_no += 1
+            if slot_no == 8:
+                break
+        db.drive(350, 0)
+
+    south_numed = [[val, i] for i, val in enumerate(slot_averages[:4])]
+    north_numed = [[val, i] for i, val in enumerate(slot_averages[4:])]
+    south_sorted = sorted(south_numed, reverse=True)
+    north_sorted = sorted(north_numed, reverse=True)
+
+    colors = ["NONE"] * 8
+    colors[south_sorted[0][1]] = "WHITE"
+    colors[south_sorted[1][1]] = "BLACK"
+    colors[north_sorted[0][1] + 4] = "WHITE"
+    colors[north_sorted[1][1] + 4] = "BLACK"
+    return colors
+>>>>>>> Stashed changes
 
 
 def deposit(slot):
@@ -329,10 +456,17 @@ if __name__ == "__main__":
     db.curve(2 / 3 * 162, -48)
     db.reset()  # necessary for voting
 
+<<<<<<< Updated upstream
     gen_slot_angle_list(5, 32, 17, 94)
 
     #slot_colours = ["NONE", "WHITE", "BLACK", "NONE", "NONE", "WHITE", "NONE", "BLACK"]
     voting()
+=======
+    distances = gen_slot_distances(5, 32, 17, 94)
+
+    # slot_colors = ["NONE", "WHITE", "BLACK", "NONE", "NONE", "WHITE", "NONE", "BLACK"]
+    slot_colors = voting(distances)
+>>>>>>> Stashed changes
 
     main_motor.run_angle(200, -300)
     
@@ -376,8 +510,8 @@ if __name__ == "__main__":
 
     # INSERT LINE TRACK TO MIDDLE
     db.settings(straight_acceleration=300, turn_acceleration=500)
-    linetracingtocorner(-1, -90, 10, 1)
-    linetracingtocorner(-1, 0, 500, 1)
+    linetrack_to_corner("left", -90, min_distance=100)
+    linetrack_to_corner("left", 0, min_distance=500)
 
     # SWEEPING THE RED CUBE
 
@@ -405,16 +539,27 @@ if __name__ == "__main__":
     
     linetracingtocorner(1, 0, 100, 1) 
 
+<<<<<<< Updated upstream
     if slot_colours[4] == "NONE" and slot_colours[5] == "NONE":
+=======
+    linetrack_to_corner("right", 0, min_distance=100)
+
+    if slot_colors[4] == "NONE" and slot_colors[5] == "NONE":
+>>>>>>> Stashed changes
         db.straight(25)
         db.turn(90)
         pass
     elif slot_colours[4] != "NONE":
         if slot_colours[5] != "NONE":
             db.turn(90)
+<<<<<<< Updated upstream
             linetracingtocorner(0, -90, 100, 1)
             linetracingtocorner(0, 0, 30, 1)
 
+=======
+            linetrack_to_corner("double", -90, min_distance=100)
+            linetrack_to_corner("double", 0, min_distance=30)
+>>>>>>> Stashed changes
             db.curve(100, -25)
             db.curve(100, 25)
 
@@ -442,6 +587,7 @@ if __name__ == "__main__":
 
             db.straight(80)
             db.turn(-90)
+<<<<<<< Updated upstream
         
         linetracingtocorner(-1, -90, 50, 1)
     else:
@@ -449,6 +595,13 @@ if __name__ == "__main__":
         linetracingtocorner(0, -90, 100, 1)
         linetracingtocorner(0, 0, 30, 1)
 
+=======
+        linetrack_to_corner("left", -90, min_distance=50)
+    else:
+        db.turn(90)
+        linetrack_to_corner("double", -90, min_distance=100)
+        linetrack_to_corner("double", 0, min_distance=30)
+>>>>>>> Stashed changes
         db.curve(100, -25)
         db.curve(100, 25)
 
@@ -460,6 +613,7 @@ if __name__ == "__main__":
         db.turn(90)
         db.straight(90)
         db.turn(-90)
+<<<<<<< Updated upstream
 
         linetracingtocorner(-1, -90, 50, 1)
 
@@ -472,6 +626,15 @@ if __name__ == "__main__":
             linetracingtocorner(0, 90, 100, 1)
             linetracingtocorner(0, 0, 30, 1)
 
+=======
+        linetrack_to_corner("left", -90, min_distance=50)
+    if slot_colors[6] == "NONE" and slot_colors[7] == "NONE":
+        pass
+    elif slot_colors[6] != "NONE":
+        if slot_colors[7] != "NONE":
+            linetrack_to_corner("double", 90, min_distance=100)
+            linetrack_to_corner("double", 0, min_distance=30)
+>>>>>>> Stashed changes
             db.curve(100, 25)
             db.curve(100, -25)
 
@@ -502,10 +665,15 @@ if __name__ == "__main__":
             db.straight(80)
             db.turn(-90)
     else:
+<<<<<<< Updated upstream
 
         linetracingtocorner(0, 90, 100, 1)
         linetracingtocorner(0, 0, 5, 1)
 
+=======
+        linetrack_to_corner("double", 90, min_distance=100)
+        linetrack_to_corner("double", 0, min_distance=50)
+>>>>>>> Stashed changes
         db.curve(100, 25)
         db.curve(100, -25)
 
@@ -587,9 +755,9 @@ if __name__ == "__main__":
     # db.curve(150, 90)
     
 
-    # linetracingtocorner(-1, 0, 150, -1)
+    # linetrack_to_corner("left", 0, min_distance=150, backwards=True)
     # db.curve(-90, -90)
-    # linetracingtocorner(-1, 0, 150, -1)
+    # linetrack_to_corner("left", 0, min_distance=150, backwards=True)
 
     # db.straight(-250)
 
@@ -597,7 +765,7 @@ if __name__ == "__main__":
 
     # db.curve(200, -90)
 
-    # linetracingtocorner(-1, 0, 100, 1)
+    # linetrack_to_corner("left", 0, min_distance=100)
 
     # ferris_wheel_up_and_turn("o")
 
@@ -659,5 +827,10 @@ if __name__ == "__main__":
     # # RED SSSS (sibilant aliteration)
     # # BACK TO INTERSECTION
 
+<<<<<<< Updated upstream
     # # linetracingtocorner(-1,-90)
     # # linetracingtocorner(-1,-90)
+=======
+    # linetrack_to_corner("left", -90)
+    # linetrack_to_corner("left", -90)
+>>>>>>> Stashed changes

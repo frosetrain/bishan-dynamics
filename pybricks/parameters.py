@@ -18,11 +18,6 @@ class Color:
     VIOLET = ...
     MAGENTA = ...
 
-    def __init__(self, h, s, v):
-        self.h = h
-        self.s = s
-        self.v = v
-
 
 Color.NONE = Color(0, 0, 0)
 Color.BLACK = Color(0, 0, 10)
