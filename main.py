@@ -1,12 +1,10 @@
-"""Bishan Dynamics BD23
-Aug 19 - homecooked by Zixi
-"""
+"""Bishan Dynamics BD23"""
 
 from pybricks.hubs import PrimeHub
 from pybricks.parameters import Color, Direction, Port, Stop
 from pybricks.pupdevices import ColorSensor, Motor
 from pybricks.robotics import GyroDriveBase
-from pybricks.tools import StopWatch, wait
+from pybricks.tools import wait
 
 hub = PrimeHub()
 left_motor = Motor(Port.E, Direction.COUNTERCLOCKWISE)
@@ -20,7 +18,6 @@ db = GyroDriveBase(left_motor, right_motor, wheel_diameter=56, axle_track=160)
 db.settings(straight_acceleration=450, turn_rate=300, turn_acceleration=300)
 left_sensor.detectable_colors([Color.RED, Color.NONE, Color.WHITE])
 right_sensor.detectable_colors([Color.NONE, Color.WHITE, Color.BLACK])
-stopwatch = StopWatch()
 
 WHITE = 100
 BLACK = 0
@@ -42,17 +39,17 @@ def gen_slot_distances(
     Returns:
         list[list[int]]: List of slot distances
     """
-    distances = []
+    slot_distances = []
     for i in range(9):  # NOTE: Why 9? There are 8 slots
         if i < 4:
-            distances.append(
+            slot_distances.append(
                 [
                     begin + (i * slot_interval) + (i * slot_width),
                     begin + (i * slot_interval) + (i * slot_width) + slot_width,
                 ]
             )
         else:
-            distances.append(
+            slot_distances.append(
                 [
                     begin + ((i - 1) * slot_interval) + (i * slot_width) + mid_gap,
                     begin
@@ -62,7 +59,7 @@ def gen_slot_distances(
                     + slot_width,
                 ]
             )
-    return distances
+    return slot_distances
 
 
 def linetrack_by_distance(distance: int) -> None:
@@ -73,57 +70,52 @@ def linetrack_by_distance(distance: int) -> None:
     """
     db.reset()
     while db.distance() < distance:
-        db.drive(100, (left_sensor.reflection() - right_sensor.reflection()) * 2.2)
+        db.drive(350, (left_sensor.reflection() - right_sensor.reflection()) * 2.2)
     db.stop()
 
 
-def linetracingtocorner(
-    turn_direction: int,
-    racing_line_turn: int = 0,
+def linetrack_to_corner(
+    turn_direction: str,
+    turn_angle: int = 0,
     min_distance: int = 30,
-    direction: int = 1,
+    backwards: bool = False,
+    speed: int = 350,
 ) -> None:
-    """Linetrack to a corner, then do a smooth turn
-    TODO: improve arguments and code
+    """Linetrack to a corner, then do a smooth turn.
 
     Args:
-        turn_direction (int): _description_
-        racing_line_turn (int, optional): _description_. Defaults to 0.
-        min_distance (int, optional): _description_. Defaults to 30.
-        direction (int, optional): _description_. Defaults to 1.
+        turn_direction (str): The direction of the turn - left, double or right
+        turn_angle (int, optional): The angle of the turn. Defaults to 0.
+        min_distance (int, optional): The minimum distance driven before turning. Defaults to 30.
+        backwards (bool, optional): Whether the bot drives backwards. Defaults to False.
+        speed (int, optional): Speed of robot. Defaults to 350.
     """
-    left_ref = left_sensor.reflection()
-    right_ref = right_sensor.reflection()
     db.reset()
+    if backwards:
+        speed = -speed
 
-    while db.distance() < min_distance:
-        left_ref = left_sensor.reflection()
-        right_ref = right_sensor.reflection()
-        current_sensor_diff = left_ref - right_ref
-        total_sensor_value = left_ref + right_ref
-        db.drive(200 * direction, current_sensor_diff * 1.2)
+    while True:
+        l_ref = left_sensor.reflection()
+        r_ref = right_sensor.reflection()
+        db.drive(speed, (l_ref - r_ref) * 1.2)
 
-    if turn_direction == 0:
-        while total_sensor_value > 40:
-            left_ref = left_sensor.reflection()
-            right_ref = right_sensor.reflection()
-            current_sensor_diff = left_ref - right_ref
-            total_sensor_value = left_ref + right_ref
-            db.drive(300 * direction, current_sensor_diff * 1.35)
-    else:
-        while current_sensor_diff / turn_direction < 75:
-            left_ref = left_sensor.reflection()
-            right_ref = right_sensor.reflection()
-            current_sensor_diff = left_ref - right_ref
-            total_sensor_value = left_ref + right_ref
-            db.drive(300 * direction, current_sensor_diff * 1.35)
+        l_ref = left_sensor.reflection()
+        r_ref = right_sensor.reflection()
+        if turn_direction == "left":
+            hit = l_ref < 0.2 and r_ref > 0.5
+        elif turn_direction == "right":
+            hit = l_ref > 0.5 and r_ref < 0.2
+        elif turn_direction == "double":
+            hit = l_ref < 0.2 and r_ref < 0.2
+
+        if hit and db.distance() > min_distance:
+            break
 
     db.straight(0, Stop.BRAKE)
     initial_heading = hub.imu.heading()
-    print(initial_heading)
-    target_heading = initial_heading + racing_line_turn
-    print(target_heading)
-    if racing_line_turn <= 0:
+    target_heading = initial_heading + turn_angle
+    print(initial_heading, target_heading)
+    if turn_angle <= 0:
         while 3 < abs(target_heading - hub.imu.heading()):
             right_motor.run(500)
     else:
@@ -196,87 +188,48 @@ def ferris_wheel_up_and_turn(desired_cart: str) -> None:
     ferris_wheel_turn(desired_cart)
 
 
-def voting() -> None:
-    """Kenneth Voting.
+def voting(slot_distances: list[list[int]]) -> list[str]:
+    """Improved Kenneth voting to scan cubes.
+    Highest average reflection is white, second highest is black.
 
-    According to Pylint,
-    R0912: Too many branches (20/12)
-    R0915: Too many statements (55/50)
+    Args:
+        slot_distances (list[list[int]]): List of distances for the slots
+
+    Returns:
+        list[str]: The result after scanning each slot
     """
-    slot_no = -1
-    on_slot = False
-    slot_readings = 0
-    slot_low = 100
-    slot_high = -1
-    first_group_white = 0
-    first_group_black = -1
-    second_group_white = 4
-    second_group_black = -1
-    slot_votes = [0] * 8
-
+    slot_averages = [0] * 8
+    slot_no = 0
+    current_tally = 0
+    reading_count = 0
+    db.reset()
     while True:
-        if db.distance() - 10 >= slot_angles[slot_no + 1][0] and not on_slot:
-            on_slot = True
+        reflection = left_sensor.reflection()
+        distance = db.distance()
+        if slot_distances[slot_no][0] + 10 < distance < slot_distances[slot_no][1] - 10:
+            current_tally += reflection
+            reading_count += 1
+        if distance >= slot_distances[slot_no + 1][0] - 10:
+            print(current_tally, reading_count)
+            slot_averages[slot_no] = current_tally / reading_count
+            current_tally = 0
+            reading_count = 0
             slot_no += 1
-        elif db.distance() + 9 >= slot_angles[slot_no][1] and on_slot:
-            on_slot = False
-            slot_avg = slot_votes[slot_no] / slot_readings
-            if slot_avg < 5:
-                print(slot_no, ":", "NONE", slot_avg, "HIGHEST:", slot_high)
-                # slot_colors[slot_no] = "NONE"
-            elif slot_avg < 18:
-                print(slot_no, ":", "BLACK", slot_avg, "LOWEST:", slot_low)
-                # slot_colors[slot_no] = "BLACK"
-            else:
-                print(slot_no, ":", "WHITE", slot_avg)
-                # slot_colors[slot_no] = "WHITE"
-
-            slot_readings = 0
-            slot_low = 100
-            slot_high = -1
-            if slot_no == 7:
+            if slot_no == 8:
                 break
+        db.drive(350, 0)
 
-        if on_slot:
-            slot_votes[slot_no] += left_sensor.reflection()
-            slot_readings += 1
-            if left_sensor.reflection() < slot_low:
-                slot_low = left_sensor.reflection()
+    south_numed = [[val, i] for i, val in enumerate(slot_averages[:4])]
+    north_numed = [[val, i] for i, val in enumerate(slot_averages[4:])]
+    south_sorted = sorted(south_numed, reverse=True)
+    north_sorted = sorted(north_numed, reverse=True)
 
-            if left_sensor.reflection() > slot_high:
-                slot_high = left_sensor.reflection()
-
-        db.drive(150, 0)
-
-    for i in range(8):
-        if i < 4:
-            if slot_votes[i] > slot_votes[first_group_white]:
-                first_group_black = first_group_white
-                first_group_white = i
-            elif (
-                first_group_black == -1 or slot_votes[i] > slot_votes[first_group_black]
-            ):
-                first_group_black = i
-        else:
-            if slot_votes[i] > slot_votes[second_group_white]:
-                second_group_black = second_group_white
-                second_group_white = i
-            elif (
-                second_group_black == -1
-                or slot_votes[i] > slot_votes[second_group_black]
-            ):
-                second_group_black = i
-
-    for i in range(8):
-        if i in (first_group_white, second_group_white):
-            slot_colors.append("WHITE")
-        elif i in (first_group_black, second_group_black):
-            slot_colors.append("BLACK")
-        else:
-            slot_colors.append("NONE")
-
-    print("VOTING RESULTS:", slot_colors)
-    db.straight(0)
+    colors = ["NONE"] * 8
+    colors[south_sorted[0][1]] = "WHITE"
+    colors[south_sorted[1][1]] = "BLACK"
+    colors[north_sorted[0][1] + 4] = "WHITE"
+    colors[north_sorted[1][1] + 4] = "BLACK"
+    return colors
 
 
 def deposit(slot: int) -> None:
@@ -310,10 +263,10 @@ if __name__ == "__main__":
     db.curve(2 / 3 * 162, -48)
     db.reset()  # necessary for voting
 
-    slot_angles = gen_slot_distances(5, 32, 17, 94)
+    distances = gen_slot_distances(5, 32, 17, 94)
 
     # slot_colors = ["NONE", "WHITE", "BLACK", "NONE", "NONE", "WHITE", "NONE", "BLACK"]
-    voting()
+    slot_colors = voting(distances)
 
     main_motor.run_angle(200, -300)
 
@@ -353,8 +306,8 @@ if __name__ == "__main__":
 
     # INSERT LINE TRACK TO MIDDLE
     db.settings(straight_acceleration=300, turn_acceleration=500)
-    linetracingtocorner(-1, -90, 10, 1)
-    linetracingtocorner(-1, 0, 500, 1)
+    linetrack_to_corner("left", -90, min_distance=100)
+    linetrack_to_corner("left", 0, min_distance=500)
 
     # SWEEPING THE RED CUBE
 
@@ -377,7 +330,7 @@ if __name__ == "__main__":
     # db.straight(50)
     # db.turn(90)
 
-    linetracingtocorner(1, 0, 100, 1)
+    linetrack_to_corner("right", 0, min_distance=100)
 
     if slot_colors[4] == "NONE" and slot_colors[5] == "NONE":
         db.straight(25)
@@ -385,8 +338,8 @@ if __name__ == "__main__":
     elif slot_colors[4] != "NONE":
         if slot_colors[5] != "NONE":
             db.turn(90)
-            linetracingtocorner(0, -90, 100, 1)
-            linetracingtocorner(0, 0, 30, 1)
+            linetrack_to_corner("double", -90, min_distance=100)
+            linetrack_to_corner("double", 0, min_distance=30)
             db.curve(100, -25)
             db.curve(100, 25)
             db.straight(200)
@@ -406,11 +359,11 @@ if __name__ == "__main__":
             deposit(4)
             db.straight(80)
             db.turn(-90)
-        linetracingtocorner(-1, -90, 50, 1)
+        linetrack_to_corner("left", -90, min_distance=50)
     else:
         db.turn(90)
-        linetracingtocorner(0, -90, 100, 1)
-        linetracingtocorner(0, 0, 30, 1)
+        linetrack_to_corner("double", -90, min_distance=100)
+        linetrack_to_corner("double", 0, min_distance=30)
         db.curve(100, -25)
         db.curve(100, 25)
         db.straight(200)
@@ -420,13 +373,13 @@ if __name__ == "__main__":
         db.turn(90)
         db.straight(90)
         db.turn(-90)
-        linetracingtocorner(-1, -90, 50, 1)
+        linetrack_to_corner("left", -90, min_distance=50)
     if slot_colors[6] == "NONE" and slot_colors[7] == "NONE":
         pass
     elif slot_colors[6] != "NONE":
         if slot_colors[7] != "NONE":
-            linetracingtocorner(0, 90, 100, 1)
-            linetracingtocorner(0, 0, 30, 1)
+            linetrack_to_corner("double", 90, min_distance=100)
+            linetrack_to_corner("double", 0, min_distance=30)
             db.curve(100, 25)
             db.curve(100, -25)
             db.straight(200)
@@ -448,8 +401,8 @@ if __name__ == "__main__":
             db.straight(80)
             db.turn(-90)
     else:
-        linetracingtocorner(0, 90, 100, 1)
-        linetracingtocorner(0, 0, 5, 1)
+        linetrack_to_corner("double", 90, min_distance=100)
+        linetrack_to_corner("double", 0, min_distance=50)
         db.curve(100, 25)
         db.curve(100, -25)
         db.straight(200)
@@ -512,9 +465,9 @@ if __name__ == "__main__":
 
     # db.curve(150, 90)
 
-    # linetracingtocorner(-1, 0, 150, -1)
+    # linetrack_to_corner("left", 0, min_distance=150, backwards=True)
     # db.curve(-90, -90)
-    # linetracingtocorner(-1, 0, 150, -1)
+    # linetrack_to_corner("left", 0, min_distance=150, backwards=True)
 
     # db.straight(-250)
 
@@ -522,7 +475,7 @@ if __name__ == "__main__":
 
     # db.curve(200, -90)
 
-    # linetracingtocorner(-1, 0, 100, 1)
+    # linetrack_to_corner("left", 0, min_distance=100)
 
     # ferris_wheel_up_and_turn("o")
 
@@ -584,5 +537,5 @@ if __name__ == "__main__":
     # RED SSSS (sibilant aliteration)
     # BACK TO INTERSECTION
 
-    # linetracingtocorner(-1,-90)
-    # linetracingtocorner(-1,-90)
+    # linetrack_to_corner("left", -90)
+    # linetrack_to_corner("left", -90)

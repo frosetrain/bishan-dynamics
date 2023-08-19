@@ -3,8 +3,7 @@ Code was written by Sriram"""
 
 from pybricks.hubs import PrimeHub
 from pybricks.parameters import Button, Color, Direction, Port, Side, Stop
-from pybricks.pupdevices import (ColorSensor, ForceSensor, Motor,
-                                 UltrasonicSensor)
+from pybricks.pupdevices import ColorSensor, ForceSensor, Motor, UltrasonicSensor
 from pybricks.robotics import GyroDriveBase
 from pybricks.tools import wait
 
