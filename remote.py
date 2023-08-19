@@ -1,9 +1,10 @@
-from pybricks.hubs import PrimeHub
-from pybricks.pupdevices import Motor
-from pybricks.parameters import Direction, Port
-from pybricks.robotics import DriveBase
-from usys import stdin
 from uselect import poll
+from usys import stdin
+
+from pybricks.hubs import PrimeHub
+from pybricks.parameters import Direction, Port
+from pybricks.pupdevices import Motor
+from pybricks.robotics import DriveBase
 
 hub = PrimeHub()
 left_motor = Motor(Port.E, Direction.COUNTERCLOCKWISE)

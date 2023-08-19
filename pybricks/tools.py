@@ -8,7 +8,7 @@ class StopWatch:
     def reset(self) -> None:
         self.begin = time()
 
-    def time(self) -> int:
+    def time(self) -> float:
         return (time() - self.begin) * 1000
 
 
