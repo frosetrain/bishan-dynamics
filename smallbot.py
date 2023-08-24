@@ -1,12 +1,11 @@
 """The code for our small bot.
 We can always use this if the BD23 randomly explodes"""
-What a bad robot
 
 from pybricks.hubs import PrimeHub
 from pybricks.parameters import Color, Direction, Port, Stop
 from pybricks.pupdevices import ColorSensor, Motor
 from pybricks.robotics import GyroDriveBase
-from pybricks.tools import StopWatch, wait
+from pybricks.tools import StopWatch
 
 hub = PrimeHub()
 third_motor = Motor(Port.E, positive_direction=Direction.CLOCKWISE)
@@ -18,7 +17,12 @@ right_sensor = ColorSensor(Port.B)
 left_sensor.detectable_colors([Color.RED, Color.YELLOW, Color.NONE])
 right_sensor.detectable_colors([Color.RED, Color.YELLOW, Color.NONE])
 db = GyroDriveBase(left_motor, right_motor, 56, 160)
-db.settings(straight_acceleration=1500, turn_rate=300, turn_acceleration=1000)
+db.settings(
+    straight_speed=430,
+    straight_acceleration=1500,
+    turn_rate=300,
+    turn_acceleration=1000,
+)
 stopwatch = StopWatch()
 
 WHITE = 93
@@ -56,7 +60,7 @@ def detect():
             slot += 1
             if slot == 8:
                 break
-        db.drive(300, (right_ref - 0.5) * 100)
+        db.drive(430, (right_ref - 0.5) * 100)
 
     south_numed = [[val, i + 1] for i, val in enumerate(tallies[:4])]
     north_numed = [[val, i + 1] for i, val in enumerate(tallies[4:])]
@@ -112,7 +116,7 @@ def deposit_one(slot, side):
         third_motor.run_target(360, 45)
         db.straight(-20 + closer)
         db.turn(90)
-        drive_to_inter(350, "left", 100)
+        drive_to_inter(430, "left", 100)
     elif slot == 2:
         db.straight(-450)
         db.turn(-90)
@@ -127,13 +131,13 @@ def deposit_one(slot, side):
         db.straight(290 - closer)
         db.turn(-90)
         if side == "north":
-            drive_to_inter(350, "double", 50)
-            drive_to_inter(350, "double", 50)
+            drive_to_inter(430, "double", 50)
+            drive_to_inter(430, "double", 50)
         elif side == "south":
-            drive_to_inter(350, "left", 50)
+            drive_to_inter(430, "left", 50)
     elif slot == 3:
         db.turn(-90)
-        drive_to_inter(350, "double", 50)
+        drive_to_inter(430, "double", 50)
         db.straight(90)
         db.turn(90)
         db.straight(150)
@@ -143,11 +147,11 @@ def deposit_one(slot, side):
         db.straight(-70)
         db.turn(90)
         if side == "north":
-            drive_to_inter(350, "double", 50)
+            drive_to_inter(430, "double", 50)
             db.turn(-90)
         elif side == "south":
             print("sdasdjas")
-            drive_to_inter(350, "right", 150)
+            drive_to_inter(430, "right", 150)
             db.turn(-90)
     elif slot == 4:
         db.straight(320)
@@ -183,8 +187,8 @@ linetrack_by_distance(150, 170)
 db.turn(-90)"""
 
 # Sweep
-linetrack_by_distance(350, 730)
-db.settings(straight_speed=350, turn_rate=300)
+linetrack_by_distance(430, 730)
+db.settings(straight_speed=430, turn_rate=300)
 db.curve(160 * 2 / 3, -100)
 db.straight(50)
 db.curve(160 * 2 / 3, 190)
@@ -197,10 +201,10 @@ db.straight(50)
 db.curve(160 * 2 / 3, 190)
 db.straight(185)
 db.turn(-90)
-drive_to_inter(350, "right", 200)
+drive_to_inter(430, "right", 200)
 
 db.turn(90)
-drive_to_inter(350, "right", 100)
+drive_to_inter(430, "right", 100)
 db.curve(160, -40)
 db.curve(160, 40)
 db.straight(80)
@@ -209,8 +213,8 @@ db.turn(90)
 db.straight(50, then=Stop.NONE)
 
 linetrack_by_distance(200, 100, sensitivity=100)
-drive_to_inter(350, "left", 200)
-db.settings(straight_speed=350, turn_rate=300)
+drive_to_inter(430, "left", 200)
+db.settings(straight_speed=430, turn_rate=300)
 positions = {"south": {"white": 1, "black": 2}, "north": {"white": 3, "black": 4}}
 deposit_one(positions["south"]["black"], "south")
 deposit_one(positions["south"]["white"], "south")
