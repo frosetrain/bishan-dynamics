@@ -1,5 +1,6 @@
 """The code for our small bot.
 We can always use this if the BD23 randomly explodes"""
+What a bad robot
 
 from pybricks.hubs import PrimeHub
 from pybricks.parameters import Color, Direction, Port, Stop
