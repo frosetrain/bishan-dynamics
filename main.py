@@ -71,7 +71,7 @@ def linetrack_by_distance(distance: int) -> None:
     db.reset()
     while db.distance() < distance:
         db.drive(100, (left_sensor.reflection() - right_sensor.reflection()) * 2.2)
-    db.stop()  ### EDITED SPEED
+    db.stop()
 
 
 def linetrack_to_corner(

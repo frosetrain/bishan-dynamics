@@ -29,7 +29,7 @@ class Motor:
     def run_target(self, speed, target_angle, wait=True):
         logger.debug(f"run_target({speed}, {target_angle})")
 
-    def run_angle(self, speed, angle):
+    def run_angle(self, speed, angle, wait=True):
         logger.debug(f"run_angle({speed}, {angle})")
 
     def reset_angle(self, speed, angle=None):
