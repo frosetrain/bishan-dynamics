@@ -60,7 +60,7 @@ def detect():
             slot += 1
             if slot == 8:
                 break
-        db.drive(430, (right_ref - 0.5) * 100)
+        db.drive(300, (right_ref - 0.5) * 100)
 
     south_numed = [[val, i + 1] for i, val in enumerate(tallies[:4])]
     north_numed = [[val, i + 1] for i, val in enumerate(tallies[4:])]
@@ -165,7 +165,6 @@ def deposit_one(slot, side):
         db.straight(-320)
 
 
-"""
 # Scan
 third_motor.reset_angle()
 third_motor.run_target(200, 0, wait=False)
@@ -184,7 +183,7 @@ db.straight(105)
 third_motor.run_target(200, 45)
 db.turn(170)
 linetrack_by_distance(150, 170)
-db.turn(-90)"""
+db.turn(-90)
 
 # Sweep
 linetrack_by_distance(430, 730)
@@ -229,3 +228,4 @@ db.straight(120)
 db.settings(turn_rate=50)
 db.turn(40, wait=False)
 third_motor.run_angle(50, -20)
+
