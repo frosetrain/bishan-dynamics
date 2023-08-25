@@ -15,7 +15,7 @@ right_sensor = ColorSensor(Port.F)
 ferris_motor = Motor(Port.B, Direction.COUNTERCLOCKWISE)
 
 db = GyroDriveBase(left_motor, right_motor, wheel_diameter=56, axle_track=160)
-db.settings(straight_acceleration=1000, turn_rate=300, turn_acceleration=1000)
+db.settings(straight_acceleration=500, turn_rate=200, turn_acceleration=500)
 left_sensor.detectable_colors([Color.RED, Color.NONE, Color.WHITE])
 right_sensor.detectable_colors([Color.NONE, Color.WHITE, Color.BLACK])
 
@@ -40,7 +40,7 @@ def gen_slot_distances(
         list[list[int]]: List of slot distances
     """
     slot_distances = []
-    for i in range(9):  # NOTE: Why 9? There are 8 slots
+    for i in range(9):
         if i < 4:
             slot_distances.append(
                 [
@@ -117,10 +117,10 @@ def linetrack_to_corner(
     print(initial_heading, target_heading)
     if turn_angle <= 0:
         while 3 < abs(target_heading - hub.imu.heading()):
-            right_motor.run(500)
+            right_motor.run(300)
     else:
         while 3 < abs(target_heading - hub.imu.heading()):
-            left_motor.run(500)
+            left_motor.run(300)
     db.straight(0, Stop.BRAKE)
 
 
@@ -132,12 +132,12 @@ def ferris_wheel_turn(desired_cart: str) -> None:
     """
     ferris_angle = ferris_motor.angle()
     print("FERRIS: ", ferris_angle)
-    if desired_cart == "RED":
+    if desired_cart == "WHITE":
         desired_ferris_angle = 450
-    elif desired_cart == "WHITE":
-        desired_ferris_angle = 900
     elif desired_cart == "BLACK":
         desired_ferris_angle = 1350
+    elif desired_cart == "EXTRAHAND":
+        desired_ferris_angle = 900
     else:
         desired_ferris_angle = 0
     ferris_angle_diff = desired_ferris_angle - ferris_angle
@@ -165,7 +165,7 @@ def ferris_wheel_turn_and_down(
     Args:
         desired_cart (str): Desired cart
     """
-    if desired_cart == "RED":
+    if desired_cart == "EXTRAHAND":
         print("you screwed up")
         return
     ferris_wheel_turn(desired_cart)
@@ -245,9 +245,145 @@ def deposit(slot: int) -> None:
         print("deposit('NONE') doesn't really make sense")
     if slot_colors[slot] == "WHITE" or slot_colors[slot] == "BLACK":
         ferris_wheel_turn_and_down(slot_colors[slot])
-        db.straight(30)
-        ferris_wheel_up_and_turn("fk u min sen")
-        db.straight(-30)
+        if slot_colors[slot] == "BLACK":
+            db.straight(25)
+            ferris_wheel_up_and_turn("")
+            db.straight(-25)
+        elif slot_colors[slot] == "WHITE":
+            db.straight(18)
+            ferris_wheel_up_and_turn("")
+            db.straight(-18)    
+        
+
+
+def go_to_slot(region: int, slot: int) -> None:
+    if slot == 0:
+        db.straight(250)
+        db.turn(-90)
+        db.straight(-35)
+        deposit(region*4 + slot)
+        db.straight(35)
+        db.turn(-90)
+        linetrack_to_corner("left", 0, min_distance=40)
+        db.straight(90)
+        db.turn(180)
+
+    elif slot == 1:
+        if region == 1:
+            db.turn(90)
+            linetrack_to_corner("double", 0, min_distance=90)
+            db.straight(90)
+            db.turn(-90)
+            linetrack_to_corner("double", 0, min_distance=30)
+            db.straight(90)
+            db.turn(180)
+            deposit(region*4 + slot)
+            db.straight(90)
+            db.turn(90)
+            linetrack_to_corner("double", 90, min_distance=70)
+            db.straight(-90)
+        else:
+            db.turn(90)
+            linetrack_to_corner("double", 0, min_distance=130)
+            db.turn(-90)
+            db.straight(140)
+            db.turn(-145)
+            deposit(region*4 + slot)
+            db.turn(-35)
+            db.straight(140)
+            db.turn(90)
+            linetrack_to_corner("right", 0, min_distance=90)
+            db.straight(90)
+            db.turn(90)
+
+    elif slot == 2:
+        if region == 1:
+            db.turn(90)
+            linetrack_to_corner("double", 0, min_distance=90)
+            db.straight(90)
+            db.turn(90)
+            linetrack_to_corner("double", 0, min_distance=30)
+            db.straight(90)
+            db.turn(180)
+            deposit(region*4 + slot)
+            linetrack_to_corner("left", -90, min_distance=0)
+            linetrack_to_corner("double", 90, min_distance=60)
+            db.straight(-90)
+        else:
+            db.turn(90)
+            linetrack_to_corner("double", 0, min_distance=130)
+            db.turn(90)
+            db.straight(140)
+            db.turn(145)
+            deposit(region*4 + slot)
+            db.turn(35)
+            db.straight(140)
+            db.turn(-90)
+            linetrack_to_corner("right", 0, min_distance=90)
+            db.straight(90)
+            db.turn(90)
+
+    elif slot == 3:
+        db.turn(180)
+        db.straight(250)
+        db.turn(90)
+        db.straight(-35)
+        deposit(region*4 + slot)
+        db.straight(35)
+        db.turn(90)
+        if(region == 1):
+            linetrack_to_corner("right", 0, min_distance=40)
+        else:
+            db.straight(250)
+        db.straight(90)
+
+
+def regional_deposit(dist=0, region=0) -> None:
+    if slot_colors[region*4 + 1] != "NONE" and slot_colors[region*4 + 2] != "NONE":
+        if region == 1:
+            db.turn(90)
+            linetrack_to_corner("double", 0, min_distance=90)
+            db.straight(90)
+            db.turn(-90)
+            linetrack_to_corner("double", 0, min_distance=30)
+            db.straight(90)
+            db.turn(180)
+            deposit(region*4 + 1)
+            #db.straight(40)
+            linetrack_to_corner("double", 0, min_distance=120)
+            db.turn(180)
+            db.straight(-90)
+            deposit(region*4 + 2)
+            
+            linetrack_to_corner("left", -90, min_distance=30)
+            linetrack_to_corner("double", 90, min_distance=60)
+        else: 
+            db.turn(90)
+            linetrack_to_corner("double", 0, min_distance=130)
+            db.turn(-90)
+            db.straight(140)
+            db.turn(-145)
+            deposit(region*4 + 1)
+            db.turn(-35)
+            db.straight(280)
+            db.turn(145)
+            deposit(region*4 + 2)
+            db.turn(35)
+            db.straight(140)
+            db.turn(-90)
+            linetrack_to_corner("right", 0, min_distance=90)
+            db.straight(90)
+            db.turn(90)
+        
+    else:
+        if slot_colors[region * 4 + 1] != "NONE":
+            go_to_slot(region, 1)
+        if slot_colors[region * 4 + 2] != "NONE":
+            go_to_slot(region, 2)
+        if slot_colors[region * 4 + 3] != "NONE":
+            go_to_slot(region, 3)
+        if slot_colors[region * 4 + 0] != "NONE":
+            go_to_slot(region, 0)
 
 
 if __name__ == "__main__":
@@ -263,10 +399,10 @@ if __name__ == "__main__":
 
     # Pick up objects
     main_motor.run_angle(200, -300, wait=False)
-    ferris_motor.run_angle(500, -210, wait=False)
+    ferris_motor.run_angle(500, 210, wait=False)
     db.curve(-100, 25)
     db.curve(-100, -25)
-    wait(1000)
+    wait(500)
     linetrack_by_distance(73)
     ferris_motor.reset_angle(0)
     db.turn(180)
@@ -280,7 +416,7 @@ if __name__ == "__main__":
     db.straight(155)
     db.turn(-90)
     db.straight(-150)
-    ferris_wheel_up_and_turn("fk u min sen")
+    ferris_wheel_up_and_turn("EXTRAHAND")
     db.curve(2 / 3 * 60, -90)
     db.curve(2 / 3 * 60, 90)
 
@@ -291,95 +427,43 @@ if __name__ == "__main__":
 
     # Sweep the broken cable
     db.straight(0)
-    db.straight(-30, Stop.NONE)
+    db.straight(-10, Stop.NONE)
     db.curve(-150, -90, Stop.NONE)
+    db.straight(-10, Stop.NONE)
     db.curve(-152, -90, Stop.NONE)
-    db.straight(-300, Stop.NONE)
+    db.straight(-280, Stop.NONE)
     db.curve(-95, -90, Stop.NONE)
     db.straight(-40, Stop.NONE)
     db.curve(-160, 90, Stop.NONE)
-    db.straight(-125, Stop.NONE)
+    db.straight(-100, Stop.NONE)
     linetrack_to_corner("right", 0, min_distance=100)
+    db.straight(90)
 
-    # Deposit at North Port
-    if slot_colors[4] == "NONE" and slot_colors[5] == "NONE":
-        db.straight(25)
-        db.turn(90)
-    elif slot_colors[4] != "NONE":
-        if slot_colors[5] != "NONE":
-            db.turn(90)
-            linetrack_to_corner("double", -90, min_distance=100)
-            linetrack_to_corner("double", 0, min_distance=30)
-            db.curve(100, -25)
-            db.curve(100, 25)
-            db.straight(200)
-            deposit(5)
-            db.curve(100, -180)
-            db.straight(20)
-            db.turn(90)
-            db.straight(50)
-            deposit(4)
-            db.straight(20)
-            db.turn(-90)
-        else:
-            db.straight(250)
-            db.curve(78, 90)
-            db.turn(180)
-            db.straight(-20)
-            deposit(4)
-            db.straight(80)
-            db.turn(-90)
-        linetrack_to_corner("left", -90, min_distance=50)
-    else:
-        db.turn(90)
-        linetrack_to_corner("double", -90, min_distance=100)
-        linetrack_to_corner("double", 0, min_distance=30)
-        db.curve(100, -25)
-        db.curve(100, 25)
-        db.straight(200)
-        deposit(5)
-        db.curve(100, -180)
-        db.straight(20)
-        db.turn(90)
-        db.straight(90)
-        db.turn(-90)
-        linetrack_to_corner("left", -90, min_distance=50)
-    if slot_colors[6] == "NONE" and slot_colors[7] == "NONE":
-        pass
-    elif slot_colors[6] != "NONE":
-        if slot_colors[7] != "NONE":
-            linetrack_to_corner("double", 90, min_distance=100)
-            linetrack_to_corner("double", 0, min_distance=30)
-            db.curve(100, 25)
-            db.curve(100, -25)
-            db.straight(200)
-            deposit(7)
-            db.curve(100, 180)
-            db.straight(20)
-            db.turn(-90)
-            db.straight(80)
-            deposit(6)
-            db.straight(20)
-            db.turn(-90)
-        else:
-            db.turn(90)
-            db.straight(250)
-            db.curve(78, -90)
-            db.turn(180)
-            db.straight(-20)
-            deposit(6)
-            db.straight(80)
-            db.turn(-90)
-    else:
-        linetrack_to_corner("double", 90, min_distance=100)
-        linetrack_to_corner("double", 0, min_distance=50)
-        db.curve(100, 25)
-        db.curve(100, -25)
-        db.straight(200)
-        deposit(7)
-        db.curve(100, 180)
-        db.straight(20)
-        db.turn(-90)
-        db.straight(70)
-        db.turn(-90)
-    ferris_wheel_up_and_turn("o")
+    regional_deposit(0, 1)
+
+    #Sweep red
+    
+    #db.settings(straight_acceleration=1000)
+    db.straight(-725)
+    db.curve(-100, -90)
+    db.straight(-575)
+    #Red sweeping complete
+    #return to path
+    db.straight(370)
+    db.turn(-90)
+    #db.settings(straight_acceleration=500)
+    db.straight(100)
+    #db.settings(straight_acceleration=300)
+
+    linetrack_to_corner("left", 0, min_distance=100)
+    db.straight(90)
+    db.turn(180)
+
+    db.settings(straight_acceleration=300, turn_acceleration=300)
+    regional_deposit(0, 0)
+    db.settings(straight_acceleration=300, turn_acceleration=500)
+
+    linetrack_by_distance(80)
+    db.turn(180) #Positions the bot to continue to 2nd solar farm and beyond
+    
+
