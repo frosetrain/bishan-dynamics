@@ -17,26 +17,37 @@ function straight(distance) {
 }
 
 function _curve(radius, angle) {
-    pivotX = x + radius * cos(heading + 90);
-    pivotY = y + radius * sin(heading + 90);
-    circle(pivotX, pivotY, 20);
+    if (angle > 0) {
+        pivotX = x + abs(radius) * cos(heading + 90);
+        pivotY = y + abs(radius) * sin(heading + 90);
+    } else {
+        pivotX = x - abs(radius) * cos(heading + 90);
+        pivotY = y - abs(radius) * sin(heading + 90);
+    }
+    // circle(pivotX, pivotY, 10);
     if (radius > 0 && angle > 0) {
+        // forwards right
         start = heading - 90;
         end = heading - 90 + angle;
     } else if (radius > 0 && angle < 0) {
-        start = heading - 90 + angle;
-        end = heading - 90;
-    } else if (radius < 0 && angle > 0) {
-        start = heading + 90 - angle;
+        // forwards left
+        start = heading - angle;
         end = heading + 90;
+    } else if (radius < 0 && angle > 0) {
+        // backwards right
+        start = heading - 90 - angle;
+        end = heading - 90;
     } else if (radius < 0 && angle < 0) {
+        // backwards left
         start = heading + 90;
         end = heading + 90 - angle;
     }
     arc(pivotX, pivotY, 2 * radius, 2 * radius, start, end);
-    x = pivotX + radius * cos(heading + angle + 90);
-    y = pivotY + radius * sin(heading + angle + 90);
-    heading -= angle;
+    m = angle > 0 ? 1 : -1;
+    x = pivotX - radius * cos(heading + angle + 90) * m;
+    y = pivotY - radius * sin(heading + angle + 90) * m;
+    circle(x, y, 20);
+    heading += angle * m;
     console.log(x, y, heading);
 }
 
@@ -48,10 +59,11 @@ function setup() {
     stroke("red");
     noFill();
 
-    straight(-30);
+    straight(-10);
     _curve(-150, -90);
+    straight(-10);
     _curve(-152, -90);
-    straight(-300);
+    straight(-280);
     stroke("orange");
     _curve(-95, -90);
     stroke("yellow");

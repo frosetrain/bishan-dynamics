@@ -228,4 +228,3 @@ db.straight(120)
 db.settings(turn_rate=50)
 db.turn(40, wait=False)
 third_motor.run_angle(50, -20)
-
