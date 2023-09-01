@@ -23,31 +23,28 @@ class GyroDriveBase:
         wheel_diameter,
         axle_track,
     ):
-        ...
+        self.dist = 0
 
     def drive(self, speed, turn_rate) -> None:
         logger.debug(f"db.drive({speed}, {turn_rate})")
+        self.dist += speed / 10
 
     def stop(self) -> None:
         logger.debug("db.stop()")
 
     def reset(self) -> None:
         logger.debug("db.reset()")
+        self.dist = 0
 
     def distance(self) -> int:
-        return 0
+        return self.dist
 
-    def settings(
-        self,
-        straight_speed=None,
-        straight_acceleration=None,
-        turn_rate=None,
-        turn_acceleration=None,
-    ) -> None:
-        ...
+    def settings(self, **kwargs) -> None:
+        logger.debug(f"db.settings({kwargs})")
 
     def straight(self, distance, then: Stop = Stop.HOLD, wait: bool = True) -> None:
         logger.debug(f"db.straight({distance})")
+        self.dist += distance
 
     def turn(self, angle, then: Stop = Stop.HOLD, wait: bool = True) -> None:
         logger.debug(f"db.turn({angle})")

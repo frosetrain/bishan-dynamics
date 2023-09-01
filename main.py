@@ -15,7 +15,7 @@ right_sensor = ColorSensor(Port.F)
 ferris_motor = Motor(Port.B, Direction.COUNTERCLOCKWISE)
 
 db = GyroDriveBase(left_motor, right_motor, wheel_diameter=56, axle_track=160)
-db.settings(straight_acceleration=500, turn_rate=200, turn_acceleration=500)
+db.settings(straight_acceleration=300, turn_rate=200, turn_acceleration=500)
 left_sensor.detectable_colors([Color.RED, Color.NONE, Color.WHITE])
 right_sensor.detectable_colors([Color.NONE, Color.WHITE, Color.BLACK])
 
@@ -24,7 +24,7 @@ BLACK = 9
 
 slot_colors: list[str] = []
 prevent_right = True
-#ferris_angle: int
+# ferris_angle: int
 
 
 def gen_slot_distances(
@@ -63,10 +63,18 @@ def gen_slot_distances(
             )
     return slot_distances
 
-def to_angle(angle: int) -> None:
+
+def main_motor_to_angle(angle: int) -> None:
+    """Run the main motor to a specific angle.
+    This wrrapper function ensures safety
+    (reduces risk that the gear cracks/explodes)
+
+    Args:
+        angle (int): Target angle
+    """
     print(main_motor.angle(), "to", angle)
     if angle > -10 or angle < -280:
-        print("you screwed up")
+        print("main_motor was attempted to be run to an unsafe angle")
         return
 
     if main_motor.angle() > angle:
@@ -76,7 +84,6 @@ def to_angle(angle: int) -> None:
         while main_motor.angle() < angle:
             main_motor.run(200)
 
-    
 
 def linetrack_by_distance(distance, sensitivity=2.2):
     """Linetrack a specific distance
@@ -86,7 +93,9 @@ def linetrack_by_distance(distance, sensitivity=2.2):
     """
     db.reset()
     while db.distance() < distance:
-        db.drive(100, (left_sensor.reflection() - right_sensor.reflection()) * sensitivity)
+        db.drive(
+            100, (left_sensor.reflection() - right_sensor.reflection()) * sensitivity
+        )
     db.stop()
 
 
@@ -147,9 +156,9 @@ def ferris_wheel_turn(desired_cart: str) -> None:
         desired_cart (str): Desired cart
     """
     ferris_angle = ferris_motor.angle()
-    #if ferris_angle < 0:
-        #ferris_angle += 1800
-    
+    # if ferris_angle < 0:
+    # ferris_angle += 1800
+
     print("FERRIS: ", ferris_angle)
     if desired_cart == "WHITE":
         desired_ferris_angle = 450
@@ -165,25 +174,26 @@ def ferris_wheel_turn(desired_cart: str) -> None:
 
     if abs(ferris_angle_diff) < 20:
         return
-    if (abs(ferris_angle_diff) > 900):
+    if abs(ferris_angle_diff) > 900:
         ferris_angle_diff = (
             (1800 - abs(ferris_angle_diff))
             * -1
             * ferris_angle_diff
             / abs(ferris_angle_diff)
         )
-    if abs(ferris_angle_diff) == 900: 
-        if(prevent_right == True and ferris_angle == 1350) or (prevent_right == False and ferris_angle == 450):
+    if abs(ferris_angle_diff) == 900:
+        if (prevent_right and ferris_angle == 1350) or (
+            not prevent_right and ferris_angle == 450
+        ):
             ferris_angle_diff = abs(ferris_angle_diff) * -1
         else:
             ferris_angle_diff = abs(ferris_angle_diff)
-        
 
-    
     print("DESIRED FERRIS ANGLE:", desired_ferris_angle)
     print("FERRIS ANGLE DIFF:", ferris_angle_diff)
     ferris_motor.run_angle(500, ferris_angle_diff)
     ferris_angle = desired_ferris_angle
+
 
 def ferris_wheel_turn_and_down(
     desired_cart: str,
@@ -215,7 +225,8 @@ def ferris_wheel_up_and_turn(desired_cart: str) -> None:
         main_motor.run(-360)
     ferris_wheel_turn(desired_cart)
 
-def align_to_line():
+
+def align_to_line() -> None:
     db.straight(-150)
     linetrack_by_distance(60, 2.2)
     db.straight(90)
@@ -274,38 +285,29 @@ def deposit(slot: int) -> None:
     Args:
         slot (int): The slot number.
     """
-
-    if slot == 2 or slot == 6:
-        prevent_right = True
-    else: 
-        prevent_right = False
-    
+    prevent_right = slot in (2, 6)
     if slot_colors[slot] == "NONE":
         print("deposit('NONE') doesn't really make sense")
     if slot_colors[slot] == "WHITE" or slot_colors[slot] == "BLACK":
         ferris_wheel_turn_and_down(slot_colors[slot])
         if slot_colors[slot] == "BLACK":
             db.straight(25)
-            if slot == 0 or slot == 3 or slot == 4 or slot == 7:
+            if slot in (0, 3, 4, 7):
                 ferris_wheel_turn("DEF")
                 ferris_wheel_up_and_turn("EXTRAHAND")
             else:
-                #ferris_wheel_up_and_turn("BLACK")
-                to_angle(-280)
+                # ferris_wheel_up_and_turn("BLACK")
+                main_motor_to_angle(-280)
             db.straight(-22)
-            
-        
         elif slot_colors[slot] == "WHITE":
             db.straight(18)
-            if slot == 0 or slot == 3 or slot == 4 or slot == 7:
+            if slot in (0, 3, 4, 7):
                 ferris_wheel_turn("DEF")
-                
                 ferris_wheel_up_and_turn("EXTRAHAND")
             else:
-                #ferris_wheel_up_and_turn("BLACK")
-                to_angle(-280)
+                # ferris_wheel_up_and_turn("BLACK")
+                main_motor_to_angle(-280)
             db.straight(-15)
-
     prevent_right = False
 
 
@@ -318,17 +320,12 @@ def go_to_slot(region: int, slot: int) -> None:
         while 3 < abs(target_heading - hub.imu.heading()):
             left_motor.run(-300)
         db.straight(0, Stop.HOLD)
-        
-        if(region == 1):
+        if region == 1:
             db.straight(35)
-
         deposit(region * 4 + slot)
-
         db.straight(-25)
         ferris_wheel_up_and_turn("EXTRAHAND")
-        #ferris_wheel_turn("BLACK")
-
-        
+        # ferris_wheel_turn("BLACK")
         initial_heading = hub.imu.heading()
         target_heading = initial_heading - 90
         print(initial_heading, target_heading)
@@ -339,9 +336,7 @@ def go_to_slot(region: int, slot: int) -> None:
         db.straight(90)
         db.turn(180)
 
-
     elif slot == 1:
-        
         if region == 1:
             # db.turn(90)
             # ferris_wheel_up_and_turn(slot_colors[region * 4 + slot])
@@ -372,7 +367,7 @@ def go_to_slot(region: int, slot: int) -> None:
             db.turn(-60)
             db.straight(-110)
             deposit(region * 4 + 1)
-            db.straight(116) #(110+3 +- 2 basic math)
+            db.straight(116)  # (110+3 +- 2 basic math)
             db.turn(60)
             initial_heading = hub.imu.heading()
             target_heading = initial_heading - 87
@@ -380,9 +375,7 @@ def go_to_slot(region: int, slot: int) -> None:
             while 2 < abs(target_heading - hub.imu.heading()):
                 right_motor.run(300)
             db.straight(0, Stop.HOLD)
-            
             ferris_wheel_up_and_turn("BLACK")
-
             db.straight(-205)
             linetrack_to_corner("double", 0, min_distance=10)
             db.straight(90)
@@ -390,6 +383,7 @@ def go_to_slot(region: int, slot: int) -> None:
             linetrack_to_corner("double", 0, min_distance=10)
             db.straight(90)
             db.turn(90)
+
         else:
             db.turn(90)
             ferris_wheel_up_and_turn(slot_colors[region * 4 + slot])
@@ -434,14 +428,13 @@ def go_to_slot(region: int, slot: int) -> None:
             db.turn(-60)
             db.straight(-100)
             deposit(region * 4 + slot)
-            db.straight(95) #(100-3 +- 2 basic math)
+            db.straight(95)  # (100-3 +- 2 basic math)
             db.turn(60)
 
-            
             linetrack_to_corner("double", 0, min_distance=60)
             db.straight(90)
             db.turn(90)
-            
+
         else:
             db.turn(90)
             linetrack_to_corner("double", 0, min_distance=130)
@@ -456,8 +449,6 @@ def go_to_slot(region: int, slot: int) -> None:
             db.straight(90)
             db.turn(90)
 
-    
-
     elif slot == 3:
         # db.turn(180)
         db.straight(-175)
@@ -468,26 +459,24 @@ def go_to_slot(region: int, slot: int) -> None:
         while 3 < abs(target_heading - hub.imu.heading()):
             left_motor.run(-300)
         db.straight(0, Stop.HOLD)
-        
-        if(region == 1):
+
+        if region == 1:
             db.straight(35)
 
         deposit(region * 4 + slot)
-        
+
         initial_heading = hub.imu.heading()
         target_heading = initial_heading + 90
         print(initial_heading, target_heading)
         while 3 < abs(target_heading - hub.imu.heading()):
             left_motor.run(300)
         db.straight(0, Stop.HOLD)
-        
+
         linetrack_to_corner("right", 0, min_distance=10)
 
         db.straight(90)
 
-        
-        
-        #OLD DEP
+        # OLD DEP
         # db.straight(90)
         # db.turn(-180)
         # db.straight(270)
@@ -503,8 +492,14 @@ def go_to_slot(region: int, slot: int) -> None:
         # db.straight(90)
 
 
-def regional_deposit(dist=0, region=0) -> None:
+def regional_deposit(region: int) -> None:
+    """Deposit the objects at a particular port
+
+    Args:
+        region (int): 1 is North Port, 0 is South Port.
+    """
     if slot_colors[region * 4 + 1] != "NONE" and slot_colors[region * 4 + 2] != "NONE":
+        # If slots 2 and 3 require deposits
         if region == 1:
             # db.turn(90)
             # linetrack_to_corner("double", 0, min_distance=90)
@@ -519,10 +514,8 @@ def regional_deposit(dist=0, region=0) -> None:
             # db.turn(-180)
             # db.straight(-90)
             # deposit(region * 4 + 2)
-
             # linetrack_to_corner("left", -90, min_distance=30)
             # linetrack_to_corner("double", 90, min_distance=60)
-
             db.turn(90)
             ferris_wheel_up_and_turn(slot_colors[region * 4 + 1])
             linetrack_to_corner("double", 0, min_distance=90)
@@ -534,14 +527,13 @@ def regional_deposit(dist=0, region=0) -> None:
             deposit(region * 4 + 1)
             db.turn(-10)
             linetrack_to_corner("right", 90, min_distance=0)
-
+            # db.curve(2/3*160, -90)
             initial_heading = hub.imu.heading()
             target_heading = initial_heading + 90
             print(initial_heading, target_heading)
             while 3 < abs(target_heading - hub.imu.heading()):
                 right_motor.run(-300)
             db.straight(0, Stop.HOLD)
-
             linetrack_to_corner("double", 0, min_distance=15)
             db.straight(-175)
             deposit(region * 4 + 2)
@@ -550,8 +542,7 @@ def regional_deposit(dist=0, region=0) -> None:
             db.straight(90)
             db.turn(90)
 
-
-        else:
+        elif region == 0:
             db.turn(90)
             linetrack_to_corner("double", 0, min_distance=130)
             db.turn(-90)
@@ -572,46 +563,40 @@ def regional_deposit(dist=0, region=0) -> None:
     else:
         if slot_colors[region * 4 + 1] != "NONE":
             go_to_slot(region, 1)
-            #align_to_line()
+            # align_to_line()
         if slot_colors[region * 4 + 2] != "NONE":
             go_to_slot(region, 2)
-            #align_to_line()
+            # align_to_line()
         if slot_colors[region * 4 + 3] != "NONE":
             go_to_slot(region, 3)
-            #align_to_line()
+            # align_to_line()
         if slot_colors[region * 4 + 0] != "NONE":
             go_to_slot(region, 0)
-            #align_to_line()
+            # align_to_line()
 
 
 if __name__ == "__main__":
-    # Interesting blob of function calls.
-    
-    db.settings(straight_acceleration=300, turn_acceleration=500)
-    
-
+    db.settings(turn_acceleration=500)
     distances = gen_slot_distances(5, 32, 17, 94)
     main_motor.reset_angle(0)
     wait(300)
-    db.curve(2 / 3 * 162, 48)
-    db.curve(2 / 3 * 162, -48)
+    db.curve(2 / 3 * 160, 48)
+    db.curve(2 / 3 * 160, -48)
     # slot_colors = ["NONE", "WHITE", "BLACK", "NONE", "NONE", "WHITE", "NONE", "BLACK"]
     slot_colors = voting(distances)
 
     # Pick up objects
-    # main_motor.run_angle(200, -320, wait=False)
-    to_angle(-280)
+    main_motor_to_angle(-280)
     ferris_motor.run_angle(500, 210, wait=False)
-    
     db.curve(-100, 25)
     db.curve(-100, -25)
     wait(500)
     linetrack_by_distance(73, 2.2)
-    db.settings(straight_acceleration=300, turn_acceleration=300)
+    db.settings(turn_acceleration=300)
     ferris_motor.reset_angle(0)
     db.turn(180)
-    db.curve(2 / 3 * -70, -85)
-    db.curve(2 / 3 * -70, 85)
+    db.curve(-47, -85)
+    db.curve(-47, 85)
     ferris_wheel_turn_and_down("WHITE")
     db.straight(-135)
     ferris_wheel_turn_and_down("BLACK")
@@ -621,29 +606,20 @@ if __name__ == "__main__":
     db.turn(-90)
     db.straight(-150)
     prevent_right = False
-    to_angle(-280)
-
-    #ferris_wheel_up_and_turn("BLACK")
-
-    db.settings(straight_acceleration=300, turn_acceleration=300)
-    db.curve(2 / 3 * 60, -90)
-    db.curve(2 / 3 * 60, 90)
-
+    main_motor_to_angle(-280)
+    db.curve(40, -90)
+    db.curve(40, 90)
     ferris_wheel_up_and_turn("BLACK")
 
-
     # Line track to North Port
-    db.settings(straight_acceleration=300, turn_acceleration=500)
+    db.settings(turn_acceleration=500)
     linetrack_to_corner("left", -90, min_distance=20)
-
     linetrack_to_corner("left", 0, min_distance=500)
-
     ferris_wheel_up_and_turn("EXTRAHAND")
+
     # Sweep the broken cable
     db.straight(0)
-  
     db.straight(-9, Stop.NONE)
-
     db.curve(-155, -90, Stop.NONE)
     db.curve(-150, -90, Stop.NONE)
     db.straight(-235, Stop.NONE)
@@ -654,78 +630,28 @@ if __name__ == "__main__":
     db.curve(-145, 90, Stop.NONE)
     db.straight(-100, Stop.NONE)
     linetrack_to_corner("right", 0, min_distance=100)
+
+    # Deposit objects at North Port
     db.straight(90)
-    db.settings(straight_acceleration=300, turn_acceleration=300)
+    db.settings(turn_acceleration=300)
+    regional_deposit(1)
 
-    # db.straight(175)
-    # db.curve(78, 90)
-    # db.straight(175)
-    regional_deposit(0, 1)
-    # if slot_colors[4] != "NONE":
-    #     ferris_wheel_turn_and_down(slot_colors[4])
-    #     db.straight(35)
-    #     ferris_wheel_up_and_turn("BLACK")
-    # else:
-    #     db.straight(35)
-
-    # # SLOT TWO
-    # db.curve(33, 90)
-    # db.straight(70)
-
-    # if slot_colors[5] != "NONE":
-    #     print("AT 0")
-    #     ferris_wheel_turn_and_down(slot_colors[5])
-    #     print("AT 1")
-    #     db.straight(35)
-    #     print("AT 2")
-    #     ferris_wheel_up_and_turn("BLACK")
-    #     print("AT 3")
-    # else:
-    #     db.straight(35)
-
-    # db.straight(425)
-
-    # if slot_colors[6] != "NONE":
-    #     ferris_wheel_turn_and_down(slot_colors[6])
-    #     db.straight(35)
-    #     ferris_wheel_up_and_turn("BLACK")
-    # else:
-    #     db.straight(35)
-
-    # db.curve(90, 180)
-    # db.straight(110)
-    # db.turn(-90)
-
-    # db.straight(70)
-
-    # if slot_colors[7] != "NONE":
-    #     ferris_wheel_turn_and_down(slot_colors[7])
-    #     db.straight(35)
-    #     ferris_wheel_up_and_turn("BLACK")
-
-    # wait(1000)
-    # Sweep red
-
-    # db.settings(straight_acceleration=1000)
+    # Dispose of the broken cable
     ferris_wheel_up_and_turn("EXTRAHAND")
     db.straight(-725)
     db.curve(-75, -90)
     db.straight(-550)
-    # Red sweeping complete
-    # return to path
     db.straight(340)
     db.turn(-90)
-    # db.settings(straight_acceleration=500)
     db.straight(100)
-    # db.settings(straight_acceleration=300)
 
+    # Linetrack to South Port
     linetrack_to_corner("left", 0, min_distance=100)
     db.straight(90)
     db.turn(180)
 
-    db.settings(straight_acceleration=300, turn_acceleration=300)
-    regional_deposit(0, 0)
-    db.settings(straight_acceleration=300, turn_acceleration=500)
-
+    # Deposit objects at South Port
+    regional_deposit(0)
+    db.settings(turn_acceleration=500)
     linetrack_by_distance(80, 2.2)
-    db.turn(180)
+    db.turn(180)  # to be continued: solar panels
